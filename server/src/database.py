@@ -28,6 +28,12 @@ async def close_db() -> None:
         pool = None
 
 
+def get_pool() -> asyncpg.Pool:
+    if pool is None:
+        raise RuntimeError("database pool is not initialized")
+    return pool
+
+
 async def upsert_machine(conn: asyncpg.Connection, hostname: str) -> None:
     await conn.execute(
         """
