@@ -1,5 +1,6 @@
 import logging
 import socket
+import sys
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 
@@ -352,3 +353,27 @@ def send_report_email(html_body: str, subject: str | None = None) -> bool:
 
     logger.info("Daily report sent to %s", EMAIL_RECIPIENT)
     return True
+
+
+async def _main(argv: list[str]) -> int:
+    from src.database import close_db, init_db
+
+    execute = "--execute" in argv
+
+    await init_db()
+    try:
+        data = await collect_report_data()
+        html = build_report_html(data)
+        if execute:
+            send_report_email(html)
+        else:
+            print(html)
+        return 0
+    finally:
+        await close_db()
+
+
+if __name__ == "__main__":
+    import asyncio
+
+    sys.exit(asyncio.run(_main(sys.argv[1:])))

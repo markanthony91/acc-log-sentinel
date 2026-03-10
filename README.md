@@ -164,6 +164,30 @@ acc_log_sentinel/
 - medir retry, latência e qualidade dos eventos
 - ajustar thresholds antes do rollout completo
 
+## Deploy de Piloto
+
+O projeto já inclui artefatos para piloto:
+
+- [docker-compose.yml](/home/marcelo/Sistemas/acc_log_sentinel/docker-compose.yml)
+- [server/Dockerfile](/home/marcelo/Sistemas/acc_log_sentinel/server/Dockerfile)
+- [pilot-checklist.md](/home/marcelo/Sistemas/acc_log_sentinel/deploy/pilot-checklist.md)
+
+Subida local:
+
+```bash
+cd acc_log_sentinel
+cp server/.env.example server/.env
+docker compose up -d db api
+curl http://127.0.0.1:16100/api/v1/health
+```
+
+Subida com Cloudflare Tunnel:
+
+```bash
+cd acc_log_sentinel
+docker compose --profile cloudflare up -d
+```
+
 ### Fase 5 - Escala para a Frota
 
 - expandir para as 134 lojas

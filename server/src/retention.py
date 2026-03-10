@@ -1,5 +1,6 @@
 import logging
 import socket
+import sys
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 
@@ -58,3 +59,21 @@ async def run_retention(
         result["deleted_metrics"],
     )
     return result
+
+
+async def _main() -> int:
+    from src.database import close_db, init_db
+
+    await init_db()
+    try:
+        result = await run_retention()
+        print(result)
+        return 0
+    finally:
+        await close_db()
+
+
+if __name__ == "__main__":
+    import asyncio
+
+    sys.exit(asyncio.run(_main()))
