@@ -76,6 +76,30 @@ A topologia preferencial para o MVP é:
 | Testes Go | `go test` |
 | Testes Python | `pytest` |
 
+## Ambiente de Desenvolvimento
+
+O projeto deve ser trabalhado preferencialmente via `nix-shell`.
+
+```bash
+cd acc_log_sentinel
+nix-shell
+```
+
+Depois disso:
+
+```bash
+# agente Go
+go test ./...
+go build ./cmd/sentinel
+
+# backend Python
+cd server
+python3 -m venv .venv
+. .venv/bin/activate
+pip install -r requirements.txt
+PYTHONPATH=. pytest tests/ -v
+```
+
 ## Estrutura Inicial
 
 ```text

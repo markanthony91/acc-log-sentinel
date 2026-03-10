@@ -20,6 +20,7 @@ Este arquivo orienta agentes de código trabalhando em `/home/marcelo/Sistemas/a
 - **Buffer local do agente:** SQLite com WAL
 - **Entrega de relatórios:** Resend
 - **Conectividade preferencial:** Cloudflare Tunnel no homelab ou VPS pública
+- **Ambiente local:** `nix-shell`
 
 ## Estrutura Esperada
 
@@ -51,6 +52,7 @@ acc_log_sentinel/
 4. O backend deve priorizar visão agregada da frota, não alertas ruidosos por evento isolado.
 5. Dados antigos devem ter retenção explícita desde o MVP.
 6. PostgreSQL deve ser configurado de forma conservadora para homelab.
+7. O projeto precisa continuar utilizável a partir de `nix-shell`.
 
 ## Convenções de Código
 

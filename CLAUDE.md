@@ -37,6 +37,9 @@ acc_log_sentinel/
 ## Comandos Esperados
 
 ```bash
+# Ambiente
+nix-shell
+
 # Go
 go test ./...
 go build ./cmd/...

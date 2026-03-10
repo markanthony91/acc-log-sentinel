@@ -2,6 +2,8 @@ bin/
 data/
 .env
 .env.local
+.venv/
+server/.venv/
 *.log
 coverage/
 dist/
