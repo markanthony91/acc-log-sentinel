@@ -1,0 +1,11 @@
+bin/
+data/
+.env
+.env.local
+*.log
+coverage/
+dist/
+build/
+sentinel
+__pycache__/
+*.pyc
