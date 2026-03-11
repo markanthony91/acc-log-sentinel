@@ -8,7 +8,7 @@ server/.venv/
 coverage/
 dist/
 build/
-sentinel
+/sentinel
 __pycache__/
 *.pyc
 .pytest_cache/

@@ -195,6 +195,34 @@ docker compose --profile cloudflare up -d
 - ajustar retenção e índices
 - adicionar grupos, regiões e visões gerenciais
 
+## Operação do Agente
+
+O agente já suporta dois modos:
+
+```bash
+cd acc_log_sentinel
+nix-shell
+
+# execução única para diagnóstico
+go run ./cmd/sentinel run-once
+
+# imprimir payload em stdout
+LOG_SENTINEL_STDOUT=1 go run ./cmd/sentinel run-once
+
+# comandos de serviço
+go run ./cmd/sentinel install
+go run ./cmd/sentinel start
+go run ./cmd/sentinel stop
+go run ./cmd/sentinel uninstall
+```
+
+Variáveis úteis:
+
+- `SENTINEL_ENDPOINT`
+- `SENTINEL_API_TOKEN`
+- `SENTINEL_BUFFER_PATH`
+- `SENTINEL_INTERVAL_MINUTES`
+
 ### Fase 6 - Evolução Pós-MVP
 
 - suporte a logs específicos de aplicativos
