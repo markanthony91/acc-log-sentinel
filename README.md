@@ -223,6 +223,67 @@ Variáveis úteis:
 - `SENTINEL_BUFFER_PATH`
 - `SENTINEL_INTERVAL_MINUTES`
 
+O agente também carrega automaticamente um arquivo local `sentinel.env` quando ele existir:
+
+- primeiro no diretório atual
+- depois no diretório do `sentinel.exe`
+
+Isso é o padrão recomendado para instalação em Windows Service, porque evita depender de variáveis de ambiente configuradas manualmente na máquina.
+
+## Instalação Windows para Operação
+
+Para operação em loja por analistas juniores, o fluxo recomendado não é compilar o projeto manualmente. O ideal é distribuir um pacote contendo:
+
+- `sentinel.exe`
+- `setup.bat`
+- `sentinel.env.example`
+
+O `setup.bat` já foi criado na raiz do projeto e faz o seguinte:
+
+- localiza `sentinel.exe`
+- cria a pasta `data\`
+- solicita `endpoint`, `token` e intervalo
+- grava `sentinel.env` ao lado do executável
+- instala o serviço Windows
+- inicia o serviço
+
+### Passo a Passo para o Analista
+
+1. Baixar o pacote do projeto em uma pasta local, por exemplo `C:\Aiknow\acc_log_sentinel`.
+2. Abrir o `Prompt de Comando` como Administrador.
+3. Entrar na pasta do projeto.
+4. Executar `setup.bat`.
+5. Informar:
+   - URL da API central, por exemplo `https://log-sentinel.seudominio.com/api/v1/events`
+   - token da API
+   - intervalo de coleta em minutos
+6. Confirmar o status do serviço ao final do script.
+
+### O que precisa para o sistema funcionar
+
+- o backend central precisa estar online e acessível por HTTPS
+- a loja precisa conseguir saída para a URL central na porta `443`
+- o token da API precisa estar válido
+- o `setup.bat` deve ser executado como Administrador para instalar o serviço
+
+### Arquivos gerados localmente
+
+- `sentinel.env`: configuração local do agente
+- `data\buffer.db`: buffer SQLite para períodos sem rede
+
+### Diagnóstico básico
+
+Após instalar, os comandos mais úteis são:
+
+```bat
+sentinel.exe status
+sentinel.exe run-once
+sentinel.exe stop
+sentinel.exe start
+```
+
+Se o pacote baixado não tiver `sentinel.exe`, o `setup.bat` só conseguirá gerar o binário se Go estiver instalado. Para operação de loja, isso não deve ser o padrão.
+
 ## Matriz CLI e API
 
 Para este projeto, CLI e API coexistem, mas com responsabilidades diferentes.

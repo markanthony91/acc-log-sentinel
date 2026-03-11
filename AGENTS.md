@@ -21,6 +21,7 @@ Este arquivo orienta agentes de código trabalhando em `/home/marcelo/Sistemas/a
 - **Entrega de relatórios:** Resend
 - **Conectividade preferencial:** Cloudflare Tunnel no homelab ou VPS pública
 - **Ambiente local:** `nix-shell`
+- **Configuração local do agente:** `sentinel.env` ao lado do executável
 
 ## Estrutura Esperada
 
@@ -53,6 +54,7 @@ acc_log_sentinel/
 5. Dados antigos devem ter retenção explícita desde o MVP.
 6. PostgreSQL deve ser configurado de forma conservadora para homelab.
 7. O projeto precisa continuar utilizável a partir de `nix-shell`.
+8. Instalação Windows deve privilegiar operação simples para analistas juniores com `setup.bat` e `sentinel.env`.
 
 ## Convenções de Código
 

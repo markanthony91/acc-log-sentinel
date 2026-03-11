@@ -63,6 +63,7 @@ python -m compileall server/src
 - alternativa: VPS pública pequena com HTTPS
 - `Tailscale Funnel` apenas para validação ou laboratório
 - não usar `localtunnel` em produção
+- agente Windows deve aceitar configuração local por `sentinel.env`
 
 ## Regras de Implementação
 

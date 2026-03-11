@@ -15,6 +15,10 @@ var svcConfig = &service.Config{
 }
 
 func main() {
+	if err := loadLocalConfig(); err != nil {
+		log.Fatalf("[LogSentinel] Config error: %v", err)
+	}
+
 	if len(os.Args) > 1 && os.Args[1] == "run-once" {
 		if err := runOnce(); err != nil {
 			log.Fatalf("[LogSentinel] Run-once error: %v", err)
