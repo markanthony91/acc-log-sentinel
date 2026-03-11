@@ -229,7 +229,8 @@ acc_log_sentinel/
 ├── sentinel.env.example
 ├── docker-compose.yml
 ├── deploy/
-│   └── pilot-checklist.md
+│   ├── pilot-checklist.md
+│   └── windows/
 ├── docs/
 │   └── plans/
 ├── cmd/
@@ -284,6 +285,19 @@ cp server/.env.example server/.env
 docker compose up -d db api
 curl http://127.0.0.1:16100/api/v1/health
 ```
+
+### Release Windows
+
+```bash
+make package-windows-release
+```
+
+Isso gera:
+
+- `dist/windows/acc_log_sentinel/`
+- `dist/windows/acc_log_sentinel-windows-amd64.zip`
+
+Opcionalmente, o time técnico pode gerar um instalador Windows com Inno Setup usando [installer.iss](/home/marcelo/Sistemas/acc_log_sentinel/deploy/windows/installer.iss).
 
 ## Contrato do Payload
 
@@ -361,13 +375,14 @@ O fluxo recomendado em loja é usar um pacote com:
 ### O que o `setup.bat` faz
 
 - localiza `sentinel.exe`
-- tenta compilar apenas se Go estiver instalado
 - cria a pasta `data\`
 - solicita endpoint, token e intervalo
 - grava `sentinel.env`
 - instala o serviço
 - inicia o serviço
 - mostra o status ao final
+
+Ele não tenta instalar Go nem compilar o projeto. Esse trabalho fica com o time técnico durante a geração da release.
 
 ### Passo a passo
 
@@ -400,6 +415,26 @@ sentinel.exe run-once
 sentinel.exe stop
 sentinel.exe start
 ```
+
+## Empacotamento para Distribuição
+
+O fluxo de distribuição recomendado é:
+
+1. gerar `sentinel.exe` para Windows
+2. montar o pacote zipado de release
+3. opcionalmente gerar `LogSentinelSetup.exe`
+
+Arquivos criados para isso:
+
+- [package_windows_release.sh](/home/marcelo/Sistemas/acc_log_sentinel/scripts/package_windows_release.sh)
+- [INSTALL-WINDOWS.txt](/home/marcelo/Sistemas/acc_log_sentinel/deploy/windows/INSTALL-WINDOWS.txt)
+- [installer.iss](/home/marcelo/Sistemas/acc_log_sentinel/deploy/windows/installer.iss)
+- [deploy/windows/README.md](/home/marcelo/Sistemas/acc_log_sentinel/deploy/windows/README.md)
+
+Isso separa claramente:
+
+- operação de loja: instalar e configurar
+- time técnico: build, empacotamento e geração do instalador
 
 ## Operação do Backend
 

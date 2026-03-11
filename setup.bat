@@ -12,35 +12,23 @@ echo.
 
 set "ROOT_DIR=%~dp0"
 set "SENTINEL_EXE="
+set "SERVICE_NAME=LogSentinelAiknow"
 
 if exist "%ROOT_DIR%sentinel.exe" set "SENTINEL_EXE=%ROOT_DIR%sentinel.exe"
 if not defined SENTINEL_EXE if exist "%ROOT_DIR%bin\sentinel.exe" set "SENTINEL_EXE=%ROOT_DIR%bin\sentinel.exe"
 
 if not defined SENTINEL_EXE (
-    where go >nul 2>nul
-    if errorlevel 1 (
-        echo [ERRO] Nao encontrei sentinel.exe neste pacote.
-        echo.
-        echo Caminhos verificados:
-        echo   %ROOT_DIR%sentinel.exe
-        echo   %ROOT_DIR%bin\sentinel.exe
-        echo.
-        echo Para operadores juniores, o fluxo recomendado e usar o pacote de release
-        echo que ja inclui o binario pronto.
-        echo.
-        pause
-        exit /b 1
-    )
-
-    echo sentinel.exe nao encontrado. Go detectado no PATH.
-    echo Vou gerar o binario agora...
-    go build -o "%ROOT_DIR%sentinel.exe" .\cmd\sentinel
-    if errorlevel 1 (
-        echo [ERRO] Falha ao gerar sentinel.exe.
-        pause
-        exit /b 1
-    )
-    set "SENTINEL_EXE=%ROOT_DIR%sentinel.exe"
+    echo [ERRO] Nao encontrei sentinel.exe neste pacote.
+    echo.
+    echo Caminhos verificados:
+    echo   %ROOT_DIR%sentinel.exe
+    echo   %ROOT_DIR%bin\sentinel.exe
+    echo.
+    echo Para operacao em loja, este pacote deve vir pronto com o binario.
+    echo Solicite ao time tecnico a release Windows oficial.
+    echo.
+    pause
+    exit /b 1
 )
 
 for %%I in ("%SENTINEL_EXE%") do set "SENTINEL_DIR=%%~dpI"
@@ -52,6 +40,33 @@ if not exist "%SENTINEL_DIR%data" mkdir "%SENTINEL_DIR%data" >nul 2>nul
 echo Binario localizado em:
 echo   %SENTINEL_EXE%
 echo.
+
+sc query "%SERVICE_NAME%" >nul 2>nul
+if not errorlevel 1 (
+    echo O servico ja existe nesta maquina.
+    echo.
+    echo Opcoes:
+    echo   1. Atualizar configuracao e reiniciar o servico
+    echo   2. Cancelar
+    echo.
+    set "ACTION=1"
+    set /p ACTION=Escolha [1]: 
+    if "%ACTION%"=="" set "ACTION=1"
+    if not "%ACTION%"=="1" (
+        echo Operacao cancelada.
+        pause
+        exit /b 0
+    )
+)
+
+if exist "%ENV_FILE%" (
+    echo Ja existe um arquivo de configuracao:
+    echo   %ENV_FILE%
+    echo.
+    echo O setup vai sobrescrever este arquivo.
+    echo.
+)
+
 echo Informe os dados do backend central.
 echo.
 
@@ -85,10 +100,21 @@ echo Arquivo de configuracao gravado em:
 echo   %ENV_FILE%
 echo.
 
-echo Instalando servico Windows...
-"%SENTINEL_EXE%" install >nul 2>nul
+sc query "%SERVICE_NAME%" >nul 2>nul
 if errorlevel 1 (
-    echo O servico pode ja estar instalado. Vou tentar iniciar mesmo assim.
+    echo Instalando servico Windows...
+    "%SENTINEL_EXE%" install
+    if errorlevel 1 (
+        echo [ERRO] Nao foi possivel instalar o servico.
+        echo Tente abrir o Prompt como Administrador e executar novamente.
+        pause
+        exit /b 1
+    )
+    echo.
+) else (
+    echo Parando servico atual para aplicar a nova configuracao...
+    "%SENTINEL_EXE%" stop >nul 2>nul
+    echo.
 )
 
 echo Iniciando servico...
