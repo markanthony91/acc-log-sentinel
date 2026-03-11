@@ -50,6 +50,44 @@ class ReportData:
     resource_alerts: list[ResourceAlert] = field(default_factory=list)
 
 
+def report_to_dict(data: ReportData) -> dict:
+    return {
+        "summary": {
+            "total_machines": data.summary.total_machines,
+            "reporting_machines": data.summary.reporting_machines,
+            "silent_machines": data.summary.silent_machines,
+            "machines_with_critical": data.summary.machines_with_critical,
+            "machines_with_error": data.summary.machines_with_error,
+            "total_events": data.summary.total_events,
+            "critical_count": data.summary.critical_count,
+            "error_count": data.summary.error_count,
+            "warning_count": data.summary.warning_count,
+            "avg_reliability": data.summary.avg_reliability,
+        },
+        "silent_hosts": data.silent_hosts,
+        "bsod_machines": [
+            {"hostname": host, "timestamp": timestamp}
+            for host, timestamp in data.bsod_machines
+        ],
+        "top_error_machines": [
+            {
+                "hostname": item.hostname,
+                "error_count": item.error_count,
+                "critical_count": item.critical_count,
+            }
+            for item in data.top_error_machines
+        ],
+        "resource_alerts": [
+            {
+                "hostname": item.hostname,
+                "alert_type": item.alert_type,
+                "value": item.value,
+            }
+            for item in data.resource_alerts
+        ],
+    }
+
+
 def detect_silent_hosts(
     expected_hosts: list[str],
     last_seen_by_host: dict[str, datetime],
@@ -325,6 +363,94 @@ async def collect_report_data(
         top_error_machines=top_offenders,
         resource_alerts=resource_alerts,
     )
+
+
+async def get_machine_detail(hostname: str) -> dict | None:
+    pool = get_pool()
+
+    async with pool.acquire() as conn:
+        machine = await conn.fetchrow(
+            """
+            SELECT hostname, first_seen, last_seen
+            FROM machines
+            WHERE hostname = $1
+            """,
+            hostname,
+        )
+        if machine is None:
+            return None
+
+        latest_metric = await conn.fetchrow(
+            """
+            SELECT cpu_percent,
+                   ram_available_mb,
+                   disk_free_percent,
+                   uptime_hours,
+                   reliability_index,
+                   bsod_detected,
+                   collected_at
+            FROM metrics
+            WHERE hostname = $1
+            ORDER BY collected_at DESC
+            LIMIT 1
+            """,
+            hostname,
+        )
+        recent_events = await conn.fetch(
+            """
+            SELECT source, event_id, level, message, event_timestamp
+            FROM events
+            WHERE hostname = $1
+            ORDER BY event_timestamp DESC
+            LIMIT 20
+            """,
+            hostname,
+        )
+        counts = await conn.fetchrow(
+            """
+            SELECT
+                COUNT(*) FILTER (WHERE level = 'Critical') AS critical_count,
+                COUNT(*) FILTER (WHERE level = 'Error') AS error_count,
+                COUNT(*) FILTER (WHERE level = 'Warning') AS warning_count
+            FROM events
+            WHERE hostname = $1 AND event_timestamp >= NOW() - INTERVAL '24 hours'
+            """,
+            hostname,
+        )
+
+    return {
+        "hostname": machine["hostname"],
+        "first_seen": machine["first_seen"].astimezone(timezone.utc).isoformat(),
+        "last_seen": machine["last_seen"].astimezone(timezone.utc).isoformat(),
+        "event_counts_24h": {
+            "critical": int(counts["critical_count"] or 0),
+            "error": int(counts["error_count"] or 0),
+            "warning": int(counts["warning_count"] or 0),
+        },
+        "latest_metric": (
+            {
+                "cpu_percent": float(latest_metric["cpu_percent"] or 0),
+                "ram_available_mb": float(latest_metric["ram_available_mb"] or 0),
+                "disk_free_percent": float(latest_metric["disk_free_percent"] or 0),
+                "uptime_hours": float(latest_metric["uptime_hours"] or 0),
+                "reliability_index": float(latest_metric["reliability_index"] or -1),
+                "bsod_detected": bool(latest_metric["bsod_detected"]),
+                "collected_at": latest_metric["collected_at"].astimezone(timezone.utc).isoformat(),
+            }
+            if latest_metric
+            else None
+        ),
+        "recent_events": [
+            {
+                "source": row["source"],
+                "event_id": row["event_id"],
+                "level": row["level"],
+                "message": row["message"],
+                "timestamp": row["event_timestamp"].astimezone(timezone.utc).isoformat(),
+            }
+            for row in recent_events
+        ],
+    }
 
 
 def send_report_email(html_body: str, subject: str | None = None) -> bool:

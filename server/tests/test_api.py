@@ -65,3 +65,70 @@ async def test_health_endpoint():
     body = response.json()
     assert body["status"] == "healthy"
     assert "hostname" in body
+
+
+@pytest.mark.asyncio
+async def test_fleet_summary_endpoint():
+    fake_summary = {
+        "summary": {
+            "total_machines": 10,
+            "reporting_machines": 9,
+            "silent_machines": 1,
+            "machines_with_critical": 1,
+            "machines_with_error": 3,
+            "total_events": 20,
+            "critical_count": 1,
+            "error_count": 5,
+            "warning_count": 14,
+            "avg_reliability": 8.1,
+        },
+        "silent_hosts": ["LOJA-002"],
+        "bsod_machines": [],
+        "top_error_machines": [],
+        "resource_alerts": [],
+    }
+    with patch("src.api.fetch_fleet_summary", new_callable=AsyncMock) as mock_summary:
+        mock_summary.return_value = fake_summary
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            response = await client.get("/api/v1/fleet/summary")
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["success"] is True
+    assert body["data"]["summary"]["total_machines"] == 10
+    mock_summary.assert_awaited_once()
+
+
+@pytest.mark.asyncio
+async def test_machine_detail_endpoint():
+    fake_machine = {
+        "hostname": "LOJA-042",
+        "first_seen": "2026-03-10T14:00:00+00:00",
+        "last_seen": "2026-03-10T15:00:00+00:00",
+        "event_counts_24h": {"critical": 0, "error": 2, "warning": 4},
+        "latest_metric": None,
+        "recent_events": [],
+    }
+    with patch("src.api.fetch_machine_detail", new_callable=AsyncMock) as mock_detail:
+        mock_detail.return_value = fake_machine
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            response = await client.get("/api/v1/machines/LOJA-042")
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["success"] is True
+    assert body["data"]["hostname"] == "LOJA-042"
+    mock_detail.assert_awaited_once()
+
+
+@pytest.mark.asyncio
+async def test_machine_detail_not_found():
+    with patch("src.api.fetch_machine_detail", new_callable=AsyncMock) as mock_detail:
+        mock_detail.return_value = None
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            response = await client.get("/api/v1/machines/LOJA-404")
+
+    assert response.status_code == 404

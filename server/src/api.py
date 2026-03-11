@@ -9,6 +9,7 @@ from pydantic import BaseModel, Field
 
 from src.config import API_SHARED_TOKEN
 from src.database import close_db, init_db, store_payload_db
+from src.reporter import collect_report_data, get_machine_detail, report_to_dict
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [LogSentinel-API] %(message)s")
 logger = logging.getLogger(__name__)
@@ -72,6 +73,15 @@ async def store_payload(payload_dict: dict) -> None:
     await store_payload_db(payload_dict)
 
 
+async def fetch_fleet_summary() -> dict:
+    report = await collect_report_data()
+    return report_to_dict(report)
+
+
+async def fetch_machine_detail(hostname: str) -> dict | None:
+    return await get_machine_detail(hostname)
+
+
 @app.post("/api/v1/events", dependencies=[Depends(verify_token)])
 async def ingest_events(payload: PayloadIn) -> dict:
     payload_dict = payload.model_dump()
@@ -96,4 +106,27 @@ async def health() -> dict:
         "status": "healthy",
         "hostname": socket.gethostname(),
         "timestamp": datetime.now(timezone.utc).isoformat(),
+    }
+
+
+@app.get("/api/v1/fleet/summary", dependencies=[Depends(verify_token)])
+async def fleet_summary() -> dict:
+    data = await fetch_fleet_summary()
+    return {
+        "success": True,
+        "hostname": socket.gethostname(),
+        "data": data,
+    }
+
+
+@app.get("/api/v1/machines/{hostname}", dependencies=[Depends(verify_token)])
+async def machine_detail(hostname: str) -> dict:
+    data = await fetch_machine_detail(hostname)
+    if data is None:
+        raise HTTPException(status_code=404, detail="Machine not found")
+
+    return {
+        "success": True,
+        "hostname": socket.gethostname(),
+        "data": data,
     }

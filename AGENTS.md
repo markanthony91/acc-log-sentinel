@@ -94,6 +94,47 @@ Alertas imediatos apenas para:
 
 Todo o restante deve entrar no relatório agregado diário.
 
+## Matriz de Responsabilidade
+
+### CLI do Agente
+
+Usar para:
+
+- instalação e remoção do serviço
+- start/stop/status
+- diagnóstico local com `run-once`
+
+Não usar para:
+
+- consultas agregadas da frota
+- leitura operacional centralizada
+
+### CLI do Backend
+
+Usar para:
+
+- retenção
+- geração manual de relatório
+- execução por scheduler
+
+Não usar para:
+
+- substituir a API de ingestão
+- virar interface principal para lojas
+
+### API do Backend
+
+Usar para:
+
+- ingestão dos payloads das lojas
+- healthcheck
+- futuros endpoints de consulta central
+
+Não usar para:
+
+- operar o serviço Windows local
+- substituir comandos de suporte do agente
+
 ## Fluxo de Trabalho
 
 1. implementar em fatias pequenas

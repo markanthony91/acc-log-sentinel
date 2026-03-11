@@ -72,6 +72,14 @@ python -m compileall server/src
 4. Relatórios devem priorizar resumo da frota.
 5. Alertas imediatos devem ser reservados a condições de alto sinal.
 
+## Separação de Interfaces
+
+- CLI do agente: operação local e suporte em loja
+- CLI do backend: jobs operacionais e manutenção
+- API do backend: integração entre agentes e central
+
+Evitar duplicar a mesma responsabilidade nas três superfícies.
+
 ## Próximos Passos Sugeridos
 
 - scaffold do módulo Go

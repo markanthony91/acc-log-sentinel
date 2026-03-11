@@ -223,6 +223,69 @@ Variáveis úteis:
 - `SENTINEL_BUFFER_PATH`
 - `SENTINEL_INTERVAL_MINUTES`
 
+## Matriz CLI e API
+
+Para este projeto, CLI e API coexistem, mas com responsabilidades diferentes.
+
+### CLI do Agente
+
+Deve existir para operação local, suporte e automação de instalação.
+
+Escopo:
+
+- `install`
+- `uninstall`
+- `start`
+- `stop`
+- `status`
+- `run-once`
+
+Objetivo:
+
+- instalar e operar o serviço Windows
+- validar coleta localmente
+- facilitar troubleshooting em loja
+
+### CLI do Backend
+
+Deve existir apenas para tarefas operacionais e jobs agendados.
+
+Escopo:
+
+- `python -m src.reporter`
+- `python -m src.reporter --execute`
+- `python -m src.retention`
+
+Objetivo:
+
+- gerar relatório sob demanda
+- executar retenção diária
+- facilitar execução por cron, systemd ou container
+
+### API do Backend
+
+Deve ser a interface de integração central do sistema.
+
+Escopo atual:
+
+- `POST /api/v1/events`
+- `GET /api/v1/health`
+- `GET /api/v1/fleet/summary`
+- `GET /api/v1/machines/{hostname}`
+
+Escopo futuro provável:
+
+- consulta agregada da frota
+- consulta por hostname
+- resumo operacional para dashboard
+
+### Regra de Arquitetura
+
+- a CLI do agente não deve duplicar a API central
+- a API central não deve tentar substituir o papel operacional da CLI local
+- a CLI do backend deve permanecer pequena e focada em jobs
+- toda integração entre lojas e backend deve passar pela API HTTP central
+
 ### Fase 6 - Evolução Pós-MVP
 
 - suporte a logs específicos de aplicativos
